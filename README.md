@@ -1,21 +1,55 @@
-# AWSSNS
+# AWSEC2
 
-AWS SNS Interface for Julia
+AWS EC2 Interface for Julia
 
 ```julia
-using AWSSNS
-using AWSSQS
+using AWSEC2
 
 aws = AWSCore.aws_config()
 
-sns_create_topic(aws, "my-topic")
+policy = """{
+    "Version": "2012-10-17",
+    "Statement": [ {
+        "Effect": "Allow",
+        "Action": [ "s3:PutObject", "s3:GetObject" ],
+        "Resource": "arn:aws:s3:::my_bucket/*"
+    } ]
+}"""
 
-q = sqs_get_queue(aws, "my-queue")
-sns_subscribe_sqs(aws, "my-topic", q; raw = true)
+init_data = [(
 
-sns_publish(aws, "my-topic", "Hello!")
+    "cloud_config.txt", "text/cloud-config",
 
-m = sqs_receive_message(q)
-println(m["message"])
-sqs_delete_message(q, m)
+    """packages:
+     - git
+     - gcc
+    """
+
+),(
+
+    "build_julia.sh", "text/x-shellscript",
+
+    """#!/bin/bash
+
+    s3 cp s3://my_bucket/my_code.tgz /tmp
+    tar xzf /tmp/my_code.tgz
+    """
+)]
+
+create_ec2(aws, "my_server",
+                ImageId      = "ami-1ecae776",
+                InstanceType = "c3.large",
+                KeyName      = "ssh-ec2",
+                Policy       = policy,
+                UserData     = init_data)
+
+println("Instance Id: $(ec2_id(aws, "my_server))")
+
+delete_ec2(aws, "my_server")
+
+
+r = ec2(aws, Dict("Action"           => "DescribeImages",
+                  "Filter.1.Name"    => "image-id",
+                  "Filter.1.Value.1" => "ami-1ecae776"))
+println(r)
 ```
