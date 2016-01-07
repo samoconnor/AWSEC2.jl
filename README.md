@@ -2,6 +2,8 @@
 
 AWS EC2 Interface for Julia
 
+[![Build Status](https://travis-ci.org/samoconnor/AWSEC2.jl.svg)](https://travis-ci.org/samoconnor/AWSEC2.jl)
+
 ```julia
 using AWSEC2
 
