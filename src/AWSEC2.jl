@@ -7,9 +7,10 @@
 #==============================================================================#
 
 
-module AWSEC2
-
 __precompile__()
+
+
+module AWSEC2
 
 export ec2, ec2_id, delete_ec2, create_ec2
 
