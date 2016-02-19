@@ -16,6 +16,7 @@ export ec2, ec2_id, delete_ec2, create_ec2
 
 
 using AWSCore
+using AWSIAM
 using SymDict
 using Retry
 include("mime.jl")
@@ -41,8 +42,7 @@ function ec2_id(aws, name)
     r = r["tagSet"]
 
     if r == ""
-        throw(AWSException("InvalidInstanceID.NotFound",
-                           "Instance ID not found for Name: $name", ""))
+        return nothing
     end
     return r["item"]["resourceId"]
 end
@@ -50,12 +50,18 @@ end
 
 function delete_ec2(aws, name)
 
+    id = ec2_id(aws, name)
+
+    if id == nothing
+        return
+    end
+
     ec2(aws, @SymDict(Action = "DeleteTags", 
-                      "ResourceId.1" = ec2_id(aws, name),
+                      "ResourceId.1" = id,
                       "Tag.1.Key" = "Name"))
 
     ec2(aws, @SymDict(Action = "TerminateInstances", 
-                      "InstanceId.1" = old_id))
+                      "InstanceId.1" = id))
 end
 
 
@@ -150,7 +156,7 @@ function create_ec2(aws, name; ImageId="ami-1ecae776",
         @delay_retry if e.code == "InvalidParameterValue" end
     end
 
-    r = r["RunInstancesResponse"]["instancesSet"]["item"]
+    r = r["instancesSet"]["item"]
 
     ec2(aws, StringDict("Action"       => "CreateTags",
                         "ResourceId.1" => r["instanceId"],
