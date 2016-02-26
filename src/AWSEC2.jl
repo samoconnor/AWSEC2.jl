@@ -19,7 +19,6 @@ using AWSCore
 using AWSIAM
 using SymDict
 using Retry
-include("mime.jl")
 
 
 ec2(aws; args...) = ec2(aws, StringDict(args))
@@ -71,7 +70,7 @@ function create_ec2(aws, name; ImageId="ami-1ecae776",
                                args...)
 
     if isa(UserData,Array)
-        UserData=base64encode(mime_multipart(UserData))
+        UserData=base64encode(AWSCore.mime_multipart(UserData))
     end
 
     # Delete old instance...
