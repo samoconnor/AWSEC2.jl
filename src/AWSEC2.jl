@@ -12,7 +12,7 @@ __precompile__()
 
 module AWSEC2
 
-export ec2, ec2_id, delete_ec2, create_ec2
+export ec2, ec2_id, delete_ec2, create_ec2, ec2_bash
 
 
 using AWSCore
@@ -166,6 +166,49 @@ function create_ec2(aws, name; ImageId="ami-1ecae776",
 end
 
 
+function ec2_bash(aws, script...;
+                  instance_name = "ec2_bash",
+                  image = "amzn-ami-hvm-2015.09.1.x86_64-gp2",
+                  ssh_key = "ssh-ec2",
+                  policy = nothing,
+                  packages = [])
+
+    user_data = [(
+
+        "cloud_config.txt", "text/cloud-config",
+
+        "packages:\n$(join([" - $p\n" for p in packages]))"
+
+    ),(
+
+        "ec2_bash.sh", "text/x-shellscript",
+
+        """#!/bin/bash
+
+        $(join(script, "\n"))
+
+        shutdown -h now
+        """
+    )]
+
+    # http://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
+    ami = ec2(aws, @SymDict(
+            Action = "DescribeImages",
+            "Filter.1.Name" = "owner-alias",
+            "Filter.1.Value" = "amazon",
+            "Filter.2.Name" = "name",
+            "Filter.2.Value" = image))
+
+    request = @SymDict(ImageId = ami["imagesSet"]["item"]["imageId"],
+                       InstanceType = "c3.large",
+                       KeyName = ssh_key,
+                       UserData = user_data)
+    if policy != nothing
+        request[:Policy] = policy
+    end
+
+    create_ec2(aws, instance_name; request...)
+end
 
 end # module AWSEC2
 
