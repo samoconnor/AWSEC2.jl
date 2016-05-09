@@ -169,7 +169,7 @@ end
 function ec2_bash(aws, script...;
                   instance_name = "ec2_bash",
                   image = "amzn-ami-hvm-2015.09.1.x86_64-gp2",
-                  ssh_key = "ssh-ec2",
+                  ssh_key = nothing,
                   policy = nothing,
                   packages = [])
 
@@ -184,6 +184,9 @@ function ec2_bash(aws, script...;
         "ec2_bash.sh", "text/x-shellscript",
 
         """#!/bin/bash
+
+        set -x
+        set -e
 
         $(join(script, "\n"))
 
@@ -201,8 +204,10 @@ function ec2_bash(aws, script...;
 
     request = @SymDict(ImageId = ami["imagesSet"]["item"]["imageId"],
                        InstanceType = "c3.large",
-                       KeyName = ssh_key,
                        UserData = user_data)
+    if ssh_key != nothing
+        request[:KeyName] = ssh_key
+    end
     if policy != nothing
         request[:Policy] = policy
     end
