@@ -24,13 +24,13 @@ using Retry
 ec2(aws; args...) = ec2(aws, StringDict(args))
 
 
-function ec2(aws, query)
+function ec2(aws::AWSConfig, query)
 
     do_request(post_request(aws, "ec2", "2014-02-01", StringDict(query)))
 end
 
 
-function ec2_id(aws, name)
+function ec2_id(aws::AWSConfig, name)
 
     r = ec2(aws, @SymDict(Action             = "DescribeTags",
                           "Filter.1.Name"    = "key",
@@ -47,7 +47,7 @@ function ec2_id(aws, name)
 end
 
 
-function delete_ec2(aws, name)
+function delete_ec2(aws::AWSConfig, name)
 
     id = ec2_id(aws, name)
 
@@ -64,10 +64,10 @@ function delete_ec2(aws, name)
 end
 
 
-function create_ec2(aws, name; ImageId="ami-1ecae776",
-                               UserData="",
-                               Policy="",
-                               args...)
+function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
+                                          UserData="",
+                                          Policy="",
+                                          args...)
 
     if isa(UserData,Array)
         UserData=base64encode(AWSCore.mime_multipart(UserData))
@@ -166,8 +166,9 @@ function create_ec2(aws, name; ImageId="ami-1ecae776",
 end
 
 
-function ec2_bash(aws, script...;
+function ec2_bash(aws::AWSConfig, script...;
                   instance_name = "ec2_bash",
+                  instance_type = "c3.large",
                   image = "amzn-ami-hvm-2015.09.1.x86_64-gp2",
                   ssh_key = nothing,
                   policy = nothing,
@@ -203,7 +204,7 @@ function ec2_bash(aws, script...;
             "Filter.2.Value" = image))
 
     request = @SymDict(ImageId = ami["imagesSet"]["item"]["imageId"],
-                       InstanceType = "c3.large",
+                       InstanceType = instance_type,
                        UserData = user_data)
     if ssh_key != nothing
         request[:KeyName] = ssh_key
