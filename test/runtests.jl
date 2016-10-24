@@ -1,7 +1,7 @@
 #==============================================================================#
 # EC2/test/runtests.jl
 #
-# Copyright Sam O'Connor 2014 - All rights reserved
+# Copyright OC Technology Pty Ltd 2014 - All rights reserved
 #==============================================================================#
 
 
@@ -23,15 +23,17 @@ aws = AWSCore.aws_config()
 # EC2 tests
 #-------------------------------------------------------------------------------
 
-@test_throws AWSCore.AWSException ec2_id(aws, "Not a real server name!!")
+@test ec2_id(aws, "Not a real server name!!") == nothing
 
 
-r = ec2(aws, Dict("Action"           => "DescribeImages",
-                  "Filter.1.Name"    => "image-id",
-                  "Filter.1.Value.1" => "ami-1ecae776"))
+r = ec2(aws, Dict("Action" => "DescribeImages",
+                  "Filter.1.Name" => "owner-alias",
+                  "Filter.1.Value" => "amazon",
+                  "Filter.2.Name" => "name",
+                  "Filter.2.Value" => "amzn-ami-hvm-2015.09.1.x86_64-gp2"))
 
 @test r["imagesSet"]["item"]["description"] == 
-      "Amazon Linux AMI 2015.03.0 x86_64 HVM GP2"
+      "Amazon Linux AMI 2015.09.1 x86_64 HVM GP2"
 
 
 

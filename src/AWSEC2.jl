@@ -3,7 +3,7 @@
 #
 # EC2 API. See http://aws.amazon.com/documentation/ec2/
 #
-# Copyright Sam O'Connor 2015 - All rights reserved
+# Copyright OC Technology Pty Ltd 2015 - All rights reserved
 #==============================================================================#
 
 
@@ -141,7 +141,7 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
             end
         end
 
-        request[symbol("IamInstanceProfile.Name")] = name
+        request[Symbol("IamInstanceProfile.Name")] = name
     end
 
     r = nothing
@@ -157,10 +157,10 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
 
     r = r["instancesSet"]["item"]
 
-    ec2(aws, StringDict("Action"       => "CreateTags",
-                        "ResourceId.1" => r["instanceId"],
-                        "Tag.1.Key"    => "Name",
-                        "Tag.1.Value"  => name))
+    ec2(aws, Dict("Action"       => "CreateTags",
+                  "ResourceId.1" => r["instanceId"],
+                  "Tag.1.Key"    => "Name",
+                  "Tag.1.Value"  => name))
 
     return r
 end
