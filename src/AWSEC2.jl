@@ -21,12 +21,12 @@ using SymDict
 using Retry
 
 
-ec2(aws; args...) = ec2(aws, StringDict(args))
+ec2(aws; args...) = ec2(aws, stringdict(args))
 
 
 function ec2(aws::AWSConfig, query)
 
-    do_request(post_request(aws, "ec2", "2014-02-01", StringDict(query)))
+    do_request(post_request(aws, "ec2", "2014-02-01", stringdict(query)))
 end
 
 
