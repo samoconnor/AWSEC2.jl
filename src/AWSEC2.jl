@@ -21,22 +21,18 @@ using SymDict
 using Retry
 
 
-ec2(aws; args...) = ec2(aws, stringdict(args))
+ec2(aws, action; args...) = ec2(aws, action, stringdict(args))
 
 
-function ec2(aws::AWSConfig, query)
-
-    do_request(post_request(aws, "ec2", "2014-02-01", stringdict(query)))
-end
+ec2(aws::AWSConfig, action, args) = AWSCore.Services.ec2(aws, action, args)
 
 
 function ec2_id(aws::AWSConfig, name)
 
-    r = ec2(aws, @SymDict(Action             = "DescribeTags",
-                          "Filter.1.Name"    = "key",
-                          "Filter.1.Value.1" = "Name",
-                          "Filter.2.Name"    = "value",
-                          "Filter.2.Value.1" = name))
+    r = ec2(aws, "DescribeTags", @SymDict("Filter.1.Name"    = "key",
+                                          "Filter.1.Value.1" = "Name",
+                                          "Filter.2.Name"    = "value",
+                                          "Filter.2.Value.1" = name))
 
     r = r["tagSet"]
 
@@ -55,12 +51,8 @@ function delete_ec2(aws::AWSConfig, name)
         return
     end
 
-    ec2(aws, @SymDict(Action = "DeleteTags", 
-                      "ResourceId.1" = id,
-                      "Tag.1.Key" = "Name"))
-
-    ec2(aws, @SymDict(Action = "TerminateInstances", 
-                      "InstanceId.1" = id))
+    ec2(aws, "DeleteTags", @SymDict("ResourceId.1" = id, "Tag.1.Key" = "Name"))
+    ec2(aws, "TerminateInstances", @SymDict("InstanceId.1" = id))
 end
 
 
@@ -82,8 +74,7 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
         @ignore if e.code == "TerminateInstances" end
     end
 
-    request = @SymDict(Action="RunInstances",
-                       ImageId,
+    request = @SymDict(ImageId,
                        UserData,
                        MinCount="1",
                        MaxCount="1",
@@ -149,7 +140,7 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
     @repeat 4 try
 
         # Deploy instance...
-        r = ec2(aws, request)
+        r = ec2(aws, "RunInstances", request)
 
     catch e
         @delay_retry if e.code == "InvalidParameterValue" end
@@ -157,10 +148,9 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
 
     r = r["instancesSet"]["item"]
 
-    ec2(aws, Dict("Action"       => "CreateTags",
-                  "ResourceId.1" => r["instanceId"],
-                  "Tag.1.Key"    => "Name",
-                  "Tag.1.Value"  => name))
+    ec2(aws, "CreateTags", Dict("ResourceId.1" => r["instanceId"],
+                                "Tag.1.Key"    => "Name",
+                                "Tag.1.Value"  => name))
 
     return r
 end
@@ -196,12 +186,10 @@ function ec2_bash(aws::AWSConfig, script...;
     )]
 
     # http://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
-    ami = ec2(aws, @SymDict(
-            Action = "DescribeImages",
-            "Filter.1.Name" = "owner-alias",
-            "Filter.1.Value" = "amazon",
-            "Filter.2.Name" = "name",
-            "Filter.2.Value" = image))
+    ami = ec2(aws, "DescribeImages", @SymDict("Filter.1.Name" = "owner-alias",
+                                              "Filter.1.Value" = "amazon",
+                                              "Filter.2.Name" = "name",
+                                              "Filter.2.Value" = image))
 
     request = @SymDict(ImageId = ami["imagesSet"]["item"]["imageId"],
                        InstanceType = instance_type,
