@@ -72,7 +72,7 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
         delete_ec2(aws, name)
 
     catch e
-        @ignore if e.code == "TerminateInstances" end
+        @ignore if ecode(e) == "TerminateInstances" end
     end
 
     request = @SymDict(ImageId,
@@ -101,7 +101,7 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
                      }""")
 
         catch e
-            @ignore if e.code == "EntityAlreadyExists" end
+            @ignore if ecode(e) == "EntityAlreadyExists" end
         end
 
         iam(aws, Action = "PutRolePolicy",
@@ -115,7 +115,7 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
                      InstanceProfileName = name,
                      Path = "/")
         catch e
-            @ignore if e.code == "EntityAlreadyExists" end
+            @ignore if ecode(e) == "EntityAlreadyExists" end
         end
 
 
@@ -126,7 +126,7 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
                      RoleName = name)
 
         catch e
-            @retry if e.code == "LimitExceeded"
+            @retry if ecode(e) == "LimitExceeded"
                 iam(aws, Action = "RemoveRoleFromInstanceProfile",
                          InstanceProfileName = name,
                          RoleName = name)
@@ -144,7 +144,7 @@ function create_ec2(aws::AWSConfig, name; ImageId="ami-1ecae776",
         r = ec2(aws, "RunInstances", request)
 
     catch e
-        @delay_retry if e.code == "InvalidParameterValue" end
+        @delay_retry if ecode(e) == "InvalidParameterValue" end
     end
 
     r = r["instancesSet"]["item"]
