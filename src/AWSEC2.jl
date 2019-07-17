@@ -18,6 +18,7 @@ export ec2, ec2_id, delete_ec2, create_ec2, ec2_bash
 using AWSCore
 using SymDict
 using Retry
+using Base64
 
 
 ec2(aws, action::String; args...) = ec2(aws, action, stringdict(args))
