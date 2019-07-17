@@ -6,7 +6,8 @@
 
 
 using AWSEC2
-using Base.Test
+using AWSCore
+using Test
 
 AWSCore.set_debug_level(1)
 

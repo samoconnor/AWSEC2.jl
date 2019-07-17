@@ -1,0 +1,10 @@
+name = "AWSEC2"
+uuid = "702785d1-5201-5208-b5ff-8fd798c35775"
+version = "0.4.0"
+
+[deps]
+AWSCore = "4f1ea46c-232b-54a6-9b17-cc2d0f3e6598"
+SymDict = "2da68c74-98d7-5633-99d6-8493888d7b1e"
+Retry = "20febd7b-183b-5ae2-ac4a-720e7ce64774"
+Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
