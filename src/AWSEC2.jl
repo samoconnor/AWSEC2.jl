@@ -16,14 +16,13 @@ export ec2, ec2_id, delete_ec2, create_ec2, ec2_bash
 
 
 using AWSCore
-using AWSIAM
 using SymDict
 using Retry
 
 
 ec2(aws, action::String; args...) = ec2(aws, action, stringdict(args))
 
-ec2(aws, args::Associative) = ec2(aws, args["Action"], args)
+ec2(aws, args::AbstractDict) = ec2(aws, args["Action"], args)
 
 ec2(aws::AWSConfig, action::String, args) = AWSCore.Services.ec2(aws, action, args)
 
